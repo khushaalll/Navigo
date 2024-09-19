@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Itinerary</title>
+    <!-- Load Google Maps JavaScript API with Places Library -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnSt9bdXbKD08eeu1B8AK7J8StuqCLcO4&libraries=places"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+
+        ul li {
+            background-color: #f9f9f9;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        @media (max-width: 768px) {
+            form {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <script>
+        let placesToVisit = [];
+        let placeAutocomplete; // Declare globally so we can set bounds after city is selected
+
+        // Initialize Autocomplete for destination city and places to visit
+        function initAutocomplete() {
+            // Autocomplete for destination city
+            const cityInput = document.getElementById("city");
+            const cityAutocomplete = new google.maps.places.Autocomplete(cityInput, { types: ['(cities)'] });
+
+            // When the city is selected, store the city name and set bounds for places search
+            cityAutocomplete.addListener('place_changed', function () {
+                const cityPlace = cityAutocomplete.getPlace();
+                if (!cityPlace.geometry) {
+                    return;
+                }
+
+                // Get the city name and update the input value
+                const cityName = cityPlace.name;
+                cityInput.value = cityName;
+
+                // Set the bounds for the places search based on the city
+                const cityBounds = cityPlace.geometry.viewport;
+                placeAutocomplete.setBounds(cityBounds); // Restrict the places search within the city
+            });
+
+            // Autocomplete for places to visit within the city
+            const placeInput = document.getElementById("placeSearch");
+            placeAutocomplete = new google.maps.places.Autocomplete(placeInput);
+
+            // When a place is selected, get its details and add it to the hidden input
+            placeAutocomplete.addListener('place_changed', function () {
+                const place = placeAutocomplete.getPlace();
+                if (!place.geometry) {
+                    return;
+                }
+                // Get place details (name)
+                const placeName = place.name;
+                document.getElementById("placeDetails").value = placeName;
+            });
+        }
+
+        // Add selected place to the list of places to visit
+        function addPlace() {
+            const place = document.getElementById("placeDetails").value;
+            if (place) {
+                // Add place to the list
+                placesToVisit.push(place);
+
+                // Update the visible list
+                const list = document.getElementById("placesList");
+                const listItem = document.createElement("li");
+                listItem.textContent = place;
+                list.appendChild(listItem);
+
+                // Clear the input field and reset hidden placeDetails
+                document.getElementById("placeSearch").value = "";
+                document.getElementById("placeDetails").value = "";
+
+                // Save the places to the hidden input field
+                document.getElementById("placesInput").value = JSON.stringify(placesToVisit);
+            }
+        }
+    </script>
+</head>
+
+<body onload="initAutocomplete()">
+<form action="/saveItinerary" method="POST">
+    <h2>Create Your Itinerary</h2>
+    <label>Enter Number of Days:</label>
+    <input type="number" name="noOfDays" required><br>
+
+    <label>Destination City:</label>
+    <input type="text" id="city" name="city" required><br>
+
+    <label>Enter Arrival Date:</label>
+    <input type="date" name="dateOfArrival" required><br>
+
+    <label>Enter Departure Date:</label>
+    <input type="date" name="dateOfDeparture" required><br>
+
+    <label>Search Places to Visit (within the destination city):</label>
+    <input id="placeSearch" type="text" placeholder="Search for places"><br>
+    <input id="placeDetails" type="hidden">
+
+    <button type="button" onclick="addPlace()">Add Place</button>
+
+    <ul id="placesList"></ul>
+
+    <label>Notes:</label>
+    <label>
+        <textarea name="notes" cols="50" rows="5" placeholder="Example: Carry an umbrella, it might be raining"></textarea>
+    </label><br>
+
+    <!-- Hidden input to store the list of places in JSON format -->
+    <input type="hidden" id="placesInput" name="placesToVisit" value="[]"><br>
+
+    <button type="submit">Submit Itinerary</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Page</title>
+</head>
+<body>
+<h1>Welcome</h1>
+<div th:if="${message}">
+    <p th:text="${message}"></p>
+</div>
+<div>
+    <form action="/create">
+        <input type="submit" value="Create New Itinerary">
+    </form>
+</div>
+<div>
+    <form action="/viewItineraries">
+        <input type="submit" value="View all Itineraries">
+    </form>
+</div>
+<div>
+    <form action="/modify">
+        <input type="submit" value="Modify Itinerary">
+    </form>
+</div>
+</body>
+</html>
